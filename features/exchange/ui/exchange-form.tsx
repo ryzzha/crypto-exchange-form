@@ -95,7 +95,7 @@ export function ExchangeForm() {
     useEffect(() => {
         fetchExchangeRate();
         getSelectedCoinBalance();
-    }, [provider, signer, fromCurrency, fromAmount])
+    }, [provider, signer, fromCurrency, toCurrency, fromAmount])
 
  return (
     <div className="w-full flex flex-col items-center gap-10 p-10 bg-white border-2 border-gray-100 shadow-xl rounded-xl">
