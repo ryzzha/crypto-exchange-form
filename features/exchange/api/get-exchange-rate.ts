@@ -16,10 +16,6 @@ export const getExchangeRate = async (fromCoin: string, toCoin: string): Promise
     const data = await res.json();
     let rate = data[fromCoin]?.[intermediateCoin] || 0;
 
-    if (stablecoins.includes(toCoin)) {
-      rate = rate * 1; 
-    }
-
     return rate;
   } catch (error) {
     console.error("Failed to fetch exchange rate:", error);

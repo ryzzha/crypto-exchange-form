@@ -14,7 +14,7 @@ interface Currency {
 
 interface Props {
   selectedCurrency: Currency;
-  onSelect: (symbol: Currency) => void;
+  onSelect: (currency: Currency) => void;
   currencies: Currency[];
 }
 
