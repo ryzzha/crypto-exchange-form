@@ -74,7 +74,7 @@ export function ExchangeForm() {
             return 0;
           }
     }
-
+    
     useEffect(() => {
         timerRef.current = setInterval(() => {
           setTimeBeforeUpdate((prev) => {
@@ -91,11 +91,13 @@ export function ExchangeForm() {
         };
       }, []);
     
+    useEffect(() => {
+        getSelectedCoinBalance();
+    }, [provider, signer, fromCurrency])
 
     useEffect(() => {
         fetchExchangeRate();
-        getSelectedCoinBalance();
-    }, [provider, signer, fromCurrency, toCurrency, fromAmount])
+    }, [fromCurrency, toCurrency, fromAmount])
 
  return (
     <div className="w-full flex flex-col items-center gap-10 p-10 bg-white border-2 border-gray-100 shadow-xl rounded-xl">
