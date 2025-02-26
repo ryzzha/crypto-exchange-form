@@ -2,7 +2,6 @@
 
 import { ExchangeIcon } from "@/components/exchange-icon"
 import { useEffect, useState, useRef } from "react"
-import { getCryptoPrice } from "../api/get-crypto-price";
 import { getExchangeRate } from "../api/get-exchange-rate";
 import { CurrencySelect } from "@/components/currency-select";
 import { useWalletContext } from "@/context/WalletContext";
@@ -30,11 +29,9 @@ const currencies = [
 export function ExchangeForm() {
    const { provider, signer } = useWalletContext();
    const [coursetype, setCoursetype] = useState<"best" | "fixed">("best")
-   const [timeBeforeUpdate, setTimeBeforeUpdate] = useState(10)
+   const [timeBeforeUpdate, setTimeBeforeUpdate] = useState(30)
    const [fromCurrency, setFromCurrency] = useState(currencies[0])
    const [toCurrency, setToCurrency] = useState(currencies[1])
-   const [fromPrice, setFromPrice] = useState(0)
-   const [toPrice, setToPrice] = useState(0)
    const [exchangeRate, setExchangeRate] = useState(0)
    const [fromAmount, setFromAmount] = useState(1)
    const [toAmount, setToAmount] = useState(2)
@@ -45,19 +42,8 @@ export function ExchangeForm() {
    const timerRef = useRef<NodeJS.Timeout | null>(null); 
 
    const fetchExchangeRate = async () => {
-        const fromPrice = await getCryptoPrice(fromCurrency.id);
-        const toPrice = await getCryptoPrice(toCurrency.id);
-
-        if(!fromPrice || !toPrice) return;
-        setFromPrice(fromPrice)
-        setToPrice(toPrice)
-
-        let exchangeRate;
-        if(fromPrice > toPrice) {
-            exchangeRate = await getExchangeRate(fromCurrency.id, toCurrency.id);
-        } else {
-            exchangeRate = await getExchangeRate(toCurrency.id, fromCurrency.id);
-        }
+        const exchangeRate = await getExchangeRate(fromCurrency.id, toCurrency.id);
+        
         console.log(exchangeRate);
         setExchangeRate(exchangeRate ?? 0);
         setToAmount(fromAmount * exchangeRate)
@@ -94,7 +80,7 @@ export function ExchangeForm() {
           setTimeBeforeUpdate((prev) => {
             if (prev <= 1) {
               fetchExchangeRate(); 
-              return 10; 
+              return 30; 
             }
             return prev - 1;
           });
@@ -126,7 +112,7 @@ export function ExchangeForm() {
                 >Fixed</button>
                 <div className="w-[1px] h-7 mx-5 bg-gray-300"></div>
                 <div className="flex items-center gap-2 font-semibold">
-                    {fromPrice > toPrice ? "1" : exchangeRate} {fromCurrency.symbol} = {toPrice > fromPrice ? "1" : exchangeRate} {toCurrency.symbol}
+                  1 {fromCurrency.symbol} = {exchangeRate} {toCurrency.symbol}
                 </div>
                 <div className="flex items-center gap-1 ml-auto text-gray-400 font-semibold">
                     <span>Time before course has been updated:</span>
@@ -191,7 +177,7 @@ export function ExchangeForm() {
                 <div
                     className={`flex flex-1 flex-col px-5 py-2 border-2 rounded-xl border-gray-100 focus-within:border-gray-500`}
                     >
-                    <span>Wallet address in {} network</span>
+                    <span>Wallet address in {toCurrency.network} network</span>
                     <input
                         className="outline-none"
                         value={address}
