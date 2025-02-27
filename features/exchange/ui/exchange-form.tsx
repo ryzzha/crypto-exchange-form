@@ -1,7 +1,7 @@
 "use client"
 
 import { ExchangeIcon } from "@/components/exchange-icon"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { getExchangeRate } from "../api/get-exchange-rate";
 import { CurrencySelect } from "@/components/currency-select";
 import { useWalletContext } from "@/context/WalletContext";
@@ -29,7 +29,7 @@ const currencies = [
 export function ExchangeForm() {
    const { provider, signer } = useWalletContext();
    const [coursetype, setCoursetype] = useState<"best" | "fixed">("best")
-   const [timeBeforeUpdate, setTimeBeforeUpdate] = useState(30)
+   const [timeBeforeUpdate, setTimeBeforeUpdate] = useState(10)
    const [fromCurrency, setFromCurrency] = useState(currencies[0])
    const [toCurrency, setToCurrency] = useState(currencies[1])
    const [exchangeRate, setExchangeRate] = useState(0)
@@ -40,15 +40,28 @@ export function ExchangeForm() {
    const [address, setAddress] = useState("")
 
    const timerRef = useRef<NodeJS.Timeout | null>(null); 
+   const lastUpdateRef = useRef<number>(Date.now());
 
-   const fetchExchangeRate = async () => {
-        const exchangeRate = await getExchangeRate(fromCurrency.id, toCurrency.id);
+   const fetchExchangeRate = useCallback(async () => {
+        const now = Date.now();
+
+        console.log("fetchExchangeRate start")
         
-        console.log(exchangeRate);
-        setExchangeRate(exchangeRate ?? 0);
-        setToAmount(fromAmount * exchangeRate)
+        if (exchangeRate !== 0 && now - lastUpdateRef.current < 1000) {
+            setToAmount(fromAmount * exchangeRate);
+            console.log("fetchExchangeRate if now - lastUpdateRef.current < 1000")
+            return;
+        }
+
+        lastUpdateRef.current = now;
+
+        const rate = await getExchangeRate(fromCurrency.id, toCurrency.id);
+        console.log("New exchange rate:", rate);
         
-    }
+        setExchangeRate(rate ?? 0);
+        setToAmount(fromAmount * (rate ?? 0)); 
+    }, [fromCurrency, toCurrency, fromAmount]);
+
 
     const getSelectedCoinBalance = async() => {
         if (!signer) return 0;
@@ -76,11 +89,13 @@ export function ExchangeForm() {
     }
     
     useEffect(() => {
+        if (timerRef.current) clearInterval(timerRef.current);
+
         timerRef.current = setInterval(() => {
           setTimeBeforeUpdate((prev) => {
             if (prev <= 1) {
               fetchExchangeRate(); 
-              return 30; 
+              return 10; 
             }
             return prev - 1;
           });
@@ -89,7 +104,7 @@ export function ExchangeForm() {
         return () => {
           if (timerRef.current) clearInterval(timerRef.current);
         };
-      }, []);
+      }, [fetchExchangeRate]);
     
     useEffect(() => {
         getSelectedCoinBalance();
