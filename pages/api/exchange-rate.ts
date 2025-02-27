@@ -7,6 +7,8 @@ const fallbackRates: Record<string, number> = {
     "bitcoin": 83000,  
     "usd": 1,         
     "tether": 1,       
+    "tether-erc20": 1,       
+    "tether-trc20": 1,       
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
