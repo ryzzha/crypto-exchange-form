@@ -29,21 +29,21 @@ export const CurrencySelect = ({ selectedCurrency, onSelect, currencies }: Props
         setIsOpen(false);
       }
     };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
+  
+    document.addEventListener("click", handleClickOutside);
+  
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
-  }, [isOpen]);
+  }, []); 
+
+  console.log("render CurrencySelect")
 
   return (
-    <div className="w-full bg-transparent transition-all duration-300 ease-in-out">
+    <div className="w-full bg-transparent transition-all duration-300 ease-in-out" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex flex-col  items-center justify-center w-full p-2 rounded-xl"
+        className="flex flex-col z-50  items-center justify-center w-full p-2 rounded-xl"
       >
         <div className="w-full flex items-center gap-3 px-3">
           {selected && <img src={selected.icon} alt={selected.name} className="w-6 h-6" />}
@@ -51,8 +51,8 @@ export const CurrencySelect = ({ selectedCurrency, onSelect, currencies }: Props
             <span className="text-gray-500">{selected?.name || "Select currency"}</span>
             <span className="text-white font-semibold text-lg">{selected?.symbol}</span>
           </div>
-          <div className={`ml-auto transition-transform duration-300 ${isOpen ? "rotate-180" : "rotate-0"}`}>
-             { isOpen ? <ChevronUp /> : <ChevronDown />  }
+          <div className={`ml-auto transition-transform align-bottom duration-300 z-10 ${isOpen ? "rotate-180" : "rotate-0"}`}>
+            <ChevronDown /> 
           </div>
         </div>
       </button>

@@ -44,7 +44,7 @@ export function ExchangeForm() {
         console.log("fetchExchangeRate start")
         
         if (exchangeRate !== 0 && now - lastUpdateRef.current < 1000) {
-            setToAmount((fromAmount ?? 1) * exchangeRate);
+            setToAmount(((fromAmount ?? 0) * exchangeRate) ?? null);
             console.log("fetchExchangeRate if now - lastUpdateRef.current < 1000")
             return;
         }
@@ -55,7 +55,8 @@ export function ExchangeForm() {
         console.log("New exchange rate:", rate);
         
         setExchangeRate(rate ?? 0);
-        setToAmount((fromAmount ?? 0) * (rate ?? 0)); 
+        const calcToAmount = (fromAmount ?? 0) * rate;
+        setToAmount(calcToAmount == 0 ? null : calcToAmount); 
     }, [fromCurrency, toCurrency, fromAmount]);
 
 
@@ -175,6 +176,8 @@ export function ExchangeForm() {
                             className="outline-none"
                             placeholder={`${toCurrency.minAmount}-${toCurrency.maxAmount}`}
                             value={toAmount ?? ""}
+                            min={toCurrency.minAmount || ""} 
+                            max={toCurrency.maxAmount}
                             readOnly
                         />
                     </div>
@@ -190,7 +193,9 @@ export function ExchangeForm() {
                     >
                     <span>Email</span>
                     <input
+                        type="email"
                         className="outline-none"
+                        placeholder="Your email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
@@ -202,6 +207,7 @@ export function ExchangeForm() {
                     <span>Wallet address in {toCurrency.network} network</span>
                     <input
                         className="outline-none"
+                        placeholder={`${toCurrency.network} wallet address`}
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
                     />
