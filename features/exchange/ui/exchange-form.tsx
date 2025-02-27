@@ -44,7 +44,7 @@ export function ExchangeForm() {
         console.log("fetchExchangeRate start")
         
         if (exchangeRate !== 0 && now - lastUpdateRef.current < 1000) {
-            setToAmount(((fromAmount ?? 0) * exchangeRate) ?? null);
+            setToAmount((fromAmount ?? 0) * exchangeRate);
             console.log("fetchExchangeRate if now - lastUpdateRef.current < 1000")
             return;
         }
