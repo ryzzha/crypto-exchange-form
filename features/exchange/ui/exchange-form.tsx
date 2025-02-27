@@ -29,8 +29,8 @@ export function ExchangeForm() {
    const [fromCurrency, setFromCurrency] = useState<ICurrency>(currencies[0])
    const [toCurrency, setToCurrency] = useState<ICurrency>(currencies[1])
    const [exchangeRate, setExchangeRate] = useState(0)
-   const [fromAmount, setFromAmount] = useState(1)
-   const [toAmount, setToAmount] = useState(2)
+   const [fromAmount, setFromAmount] = useState<number | null>(null)
+   const [toAmount, setToAmount] = useState<number | null>(null)
    const [selectedTokenBalance, setSelectedTokenBalance] = useState(0);
    const [email, setEmail] = useState("")
    const [address, setAddress] = useState("")
@@ -44,7 +44,7 @@ export function ExchangeForm() {
         console.log("fetchExchangeRate start")
         
         if (exchangeRate !== 0 && now - lastUpdateRef.current < 1000) {
-            setToAmount(fromAmount * exchangeRate);
+            setToAmount((fromAmount ?? 1) * exchangeRate);
             console.log("fetchExchangeRate if now - lastUpdateRef.current < 1000")
             return;
         }
@@ -55,7 +55,7 @@ export function ExchangeForm() {
         console.log("New exchange rate:", rate);
         
         setExchangeRate(rate ?? 0);
-        setToAmount(fromAmount * (rate ?? 0)); 
+        setToAmount((fromAmount ?? 0) * (rate ?? 0)); 
     }, [fromCurrency, toCurrency, fromAmount]);
 
 
@@ -146,9 +146,16 @@ export function ExchangeForm() {
                     <div className="w-1/2 px-5 py-2 flex flex-1 flex-col" >
                         <span>Give</span>
                         <input
+                            type="number"
                             className="outline-none bg-transparent"
-                            value={fromAmount}
-                            onChange={(e) => setFromAmount(Number(e.target.value))}
+                            placeholder={`${fromCurrency.minAmount}-${fromCurrency.maxAmount}`}
+                            value={fromAmount ?? ""}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setFromAmount(value === "" ? null : Number(value));
+                            }}
+                            min={fromCurrency.minAmount || ""} 
+                            max={fromCurrency.maxAmount}
                         />
                     </div>
                     <div className="w-1/2 bg-gray-900/85 rounded-xl z-0" >
@@ -164,8 +171,10 @@ export function ExchangeForm() {
                     <div className="w-1/2 px-5 py-2 flex flex-1 flex-col" >
                         <span>Receive</span>
                         <input
+                            type="number"
                             className="outline-none"
-                            value={toAmount}
+                            placeholder={`${toCurrency.minAmount}-${toCurrency.maxAmount}`}
+                            value={toAmount ?? ""}
                             readOnly
                         />
                     </div>
