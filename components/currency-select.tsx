@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown } from "./icons/chevron-down";
-import { ChevronUp } from "./icons/chevron-up";
 import { ICurrency } from "@/features/exchange/model/types";
 
 interface Props {
