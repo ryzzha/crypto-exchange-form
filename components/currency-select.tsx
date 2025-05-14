@@ -2,19 +2,23 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown } from "./icons/chevron-down";
 import { ICurrency } from "@/features/exchange/model/types";
+import { memo } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 
 interface Props {
-  selectedCurrency: ICurrency;
-  onSelect: (currency: ICurrency) => void;
+  name: "fromCurrency" | "toCurrency";
   currencies: ICurrency[];
 }
 
-export const CurrencySelect = ({ selectedCurrency, onSelect, currencies }: Props) => {
+export const CurrencySelect = memo(({ name, currencies }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const selected = currencies.find((c) => c.id === selectedCurrency.id);
   const dropdownRef = useRef<HTMLDivElement>(null); 
+  
+  const { setValue } = useFormContext();
+  const selectedCurrency = useWatch({ name });
+  const selected = currencies.find((c) => c.id === selectedCurrency.id);
 
   const filteredCurrencies = currencies.filter((currency) =>
     (activeTab === "all" || currency.type === activeTab) &&
@@ -92,7 +96,7 @@ export const CurrencySelect = ({ selectedCurrency, onSelect, currencies }: Props
                 key={currency.name}
                 className="flex items-center w-full rounded-xl py-2 hover:bg-gray-200"
                 onClick={() => {
-                  onSelect(currency);
+                  setValue(name, currency);
                   setIsOpen(false);
                 }}
               >
@@ -106,4 +110,4 @@ export const CurrencySelect = ({ selectedCurrency, onSelect, currencies }: Props
       </div>
     </div>
   );
-};
+});

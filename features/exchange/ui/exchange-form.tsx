@@ -9,6 +9,7 @@ import { ethers } from "ethers";
 import { currencies } from "@/shared/constants";
 import { ICurrency } from "../model/types";
 import { formatTime } from "@/shared/helpers";
+import { useForm, SubmitHandler, useWatch } from "react-hook-form"
 
 const ERC20_ABI = [
     {
@@ -21,30 +22,47 @@ const ERC20_ABI = [
       "type": "function"
     }
 ];
+
+export interface ExchangeForm {
+    fromCurrency: ICurrency;
+    toCurrency: ICurrency;
+    fromAmount: number | null;
+    toAmount: number | null;
+    email: string;
+    address: string;
+}
   
 export function ExchangeForm() {
    const { provider, signer } = useWalletContext();
    const [coursetype, setCoursetype] = useState<"best" | "fixed">("best")
    const [timeBeforeUpdate, setTimeBeforeUpdate] = useState(30)
-   const [fromCurrency, setFromCurrency] = useState<ICurrency>(currencies[0])
-   const [toCurrency, setToCurrency] = useState<ICurrency>(currencies[1])
    const [exchangeRate, setExchangeRate] = useState(0)
-   const [fromAmount, setFromAmount] = useState<number | null>(null)
-   const [toAmount, setToAmount] = useState<number | null>(null)
    const [selectedTokenBalance, setSelectedTokenBalance] = useState(0);
-   const [email, setEmail] = useState("")
-   const [address, setAddress] = useState("")
 
+   const { register, handleSubmit, setValue } = useForm<ExchangeForm>({
+    defaultValues: {
+      fromCurrency: currencies[0],
+      toCurrency: currencies[1],
+      fromAmount: 1,
+      toAmount: null,
+      email: "user@gmail.com",
+      address: "0x3jh532...."
+  }
+  });
+
+   const fromCurrency = useWatch({ name: "fromCurrency" });
+   const toCurrency = useWatch({ name: "toCurrency" });
+   const fromAmount = useWatch({ name: "fromAmount" });
+ 
    const timerRef = useRef<NodeJS.Timeout | null>(null); 
    const lastUpdateRef = useRef<number>(Date.now());
 
    const fetchExchangeRate = useCallback(async () => {
         const now = Date.now();
-
-        console.log("fetchExchangeRate start")
         
         if (exchangeRate !== 0 && now - lastUpdateRef.current < 1000) {
-            setToAmount((fromAmount ?? 0) * exchangeRate);
+            setValue("toAmount", (fromAmount ?? 0) * exchangeRate);
+            console.log("calcToAmount -> ", (fromAmount ?? 0) * exchangeRate)
             console.log("fetchExchangeRate if now - lastUpdateRef.current < 1000")
             return;
         }
@@ -56,7 +74,7 @@ export function ExchangeForm() {
         
         setExchangeRate(rate ?? 0);
         const calcToAmount = (fromAmount ?? 0) * rate;
-        setToAmount(calcToAmount == 0 ? null : calcToAmount); 
+        setValue("toAmount", calcToAmount == 0 ? null : calcToAmount);
     }, [fromCurrency, toCurrency, fromAmount]);
 
 
@@ -111,8 +129,12 @@ export function ExchangeForm() {
         fetchExchangeRate();
     }, [fromCurrency, toCurrency, fromAmount])
 
+    const onSubmit: SubmitHandler<ExchangeFormType> = (data: ExchangeForm) => {
+        console.log("Submitted data:", data);
+    }
+
  return (
-    <div className="w-full flex flex-col items-center gap-7 p-10 bg-white border border-gray-100 shadow-lg rounded-3xl ">
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col items-center gap-7 p-10 bg-white border border-gray-100 shadow-lg rounded-3xl ">
         <div className="w-full p-5 border-2 border-gray-200 mb-8 bg-gray-100 rounded-3xl">
             <div className="w-full flex items-center gap-1 md:gap-2">
                 <span className=" md:mr-3 text-gray-400 text-sm md:text-base">Select course type</span>
@@ -150,17 +172,13 @@ export function ExchangeForm() {
                             type="number"
                             className="outline-none bg-transparent"
                             placeholder={`${fromCurrency.minAmount}-${fromCurrency.maxAmount}`}
-                            value={fromAmount ?? ""}
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                setFromAmount(value === "" ? null : Number(value));
-                            }}
                             min={fromCurrency.minAmount || ""} 
                             max={fromCurrency.maxAmount}
+                            { ...register("fromAmount") } 
                         />
                     </div>
                     <div className="w-1/2 bg-gray-900/85 rounded-xl z-0" >
-                         <CurrencySelect selectedCurrency={fromCurrency} onSelect={setFromCurrency} currencies={currencies} />
+                        <CurrencySelect name="fromCurrency" currencies={currencies} />
                     </div>
                 </div>
 
@@ -175,14 +193,14 @@ export function ExchangeForm() {
                             type="number"
                             className="outline-none"
                             placeholder={`${toCurrency.minAmount}-${toCurrency.maxAmount}`}
-                            value={toAmount ?? ""}
                             min={toCurrency.minAmount || ""} 
                             max={toCurrency.maxAmount}
                             readOnly
+                            { ...register("toAmount") }
                         />
                     </div>
                     <div className="w-1/2 bg-gray-900/85 rounded-xl" >
-                        <CurrencySelect selectedCurrency={toCurrency} onSelect={setToCurrency} currencies={currencies} />
+                        <CurrencySelect name="toCurrency" currencies={currencies} />
                     </div>
                 </div>
             </div>
@@ -196,8 +214,7 @@ export function ExchangeForm() {
                         type="email"
                         className="outline-none"
                         placeholder="Your email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        {...register("email") }
                     />
                 </div>
 
@@ -208,8 +225,7 @@ export function ExchangeForm() {
                     <input
                         className="outline-none"
                         placeholder={`${toCurrency.network} wallet address`}
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
+                        {...register("address") }
                     />
                 </div>
             </div>
@@ -225,6 +241,6 @@ export function ExchangeForm() {
                 and the CryptoExchange <span className="text-red-500/85 underline underline-offset-1">user agreement</span>
             </p>
         </div>
-    </div>
+    </form>
  )
 }
